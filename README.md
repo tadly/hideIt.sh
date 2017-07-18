@@ -66,7 +66,8 @@ WM_NAME(STRING) = "Polybar tray window"
 # Hide it
 $ ./hideIt.sh --name "Polybar tray window" --hover
 ```
-![hideIt-systray](assets/hideIt-systray.gif)
+![hideIt-systray](assets/hideIt-systray.gif)  
+*[Wallpaper](https://www.pixiv.net/member_illust.php?mode=medium&illust_id=60439088)*
 
 
 ### Polybar (my main bar)
@@ -74,13 +75,15 @@ You don't need my whole polybar config right? Right!
 
 I only did this for the purpose of testing while working on this script but...  
 ...I think I like it! :)  
-![hideIt-polybar](assets/hideIt-polybar.gif)
+![hideIt-polybar](assets/hideIt-polybar.gif)  
+*[Wallpaper](https://www.pixiv.net/member_illust.php?mode=medium&illust_id=60439088)*
 
 
 ### Nautilus?
 Heck... why stop at the statusbar amiright?  
 
-![hideIt-nautilus](assets/hideIt-nautilus.gif)
+![hideIt-nautilus](assets/hideIt-nautilus.gif)  
+*[Wallpaper](https://www.pixiv.net/member_illust.php?mode=medium&illust_id=60439088)*
 
 *Disclaimer: Yes, I know, this is getting silly but I gotta demonstrate how versatile this is* ( ͡° ͜ʖ ͡°)
 
