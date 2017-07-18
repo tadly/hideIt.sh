@@ -10,14 +10,26 @@ This sript however was very much bound to my environment.
 Eventually I decided it would be a great idea to share it with the unix community  
 and re-wrote the whole thing, making it more generic and (hopefully) userfriendly.
 
+## Table of Contents
+ * [Requirements](#requirements)
+    * [Optionally](#optionally)
+ * [Usage](#usage)
+ * [Examples](#examples)
+    * [Polybar systray](#polybar-systray)
+    * [Polybar (my main bar)](#polybar-my-main-bar)
+    * [Nautilus?](#nautilus)
+ * [Q&A](#qa)
+
 
 ## Requirements
 1. bash
 2. xdotool
 3. xwininfo
 
+
 ### Optionally
 1. xprop (to find the windows name)
+
 
 ## Usage
 You can read some help text right?
