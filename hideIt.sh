@@ -28,6 +28,7 @@ maxX=""
 maxY=""
 
 hover=1
+signal=1
 interval=1
 peek=3
 direction="left"
@@ -58,6 +59,10 @@ usage() {
     printf "   If a region was defined, hover will be ignored!\n"
     printf "   This will only work if --peek is greater 0.\n"
     printf "   By default, hover is off.\n"
+    printf "\n"
+    printf " -S, --signal\n"
+    printf "   Toggle the visibility by sending a 'SIGUSR1' signal.\n"
+    printf "   Both --region and --hover will be ignored.\n"
     printf "\n"
     printf " -i, --interval [interval]\n"
     printf "   Interval in seconds to check the cursors location.\n"
@@ -91,6 +96,9 @@ argparse() {
                 ;;
             "-H"|"--hover")
                 hover=0
+                ;;
+            "-S"|"--signal")
+                signal=0
                 ;;
             "-r"|"--region")
                 local posX posY offsetX offsetY
@@ -300,10 +308,16 @@ function hide_window() {
 function serve() {
     # Check if the cursors location and act accordingly
     local _hide=0
-
     while true; do
-        eval $(xdotool getmouselocation --shell)
+        # SIGUSR1 will cause the sleep/wait combo to
+        # end so we have to loop that too
+        if [ $signal -eq 0 ]; then
+            sleep infinity &
+            wait $!
+            continue
+        fi
 
+        eval $(xdotool getmouselocation --shell)
 
         # Test if the cursor is within the region
         if [ $_has_region -eq 0 ]; then
@@ -339,7 +353,18 @@ function serve() {
 
 
 function restore() {
+    printf "Restoring original window position...\n"
     hide_window 1
+    exit 0
+}
+
+
+function toggle() {
+    if [ $_is_hidden -eq 0 ]; then
+        hide_window 1
+    else
+        hide_window 0
+    fi
 }
 
 
@@ -361,17 +386,18 @@ function main() {
     printf "Fetching screen dimensions...\n"
     fetch_screen_dimensions
 
-    printf "Initially hiding window...\n"
-    trap restore EXIT
-    hide_window 0
+    trap restore SIGINT
+    trap toggle SIGUSR1
 
+    printf "Initially hiding window...\n"
+    hide_window 0
 
     printf "Defined region:\n"
     printf "  X: $minX $maxX\n"
     printf "  Y: $minY $maxY\n"
     printf "\n"
 
-    printf "Waiting for trigger..."
+    printf "Waiting for trigger...\n"
     serve
 
     exit 0
