@@ -102,13 +102,24 @@ Heck... why stop at the statusbar amiright?
 
 
 ### By keyboard (SIGUSR1)
-Instead of using your mouse to trigger the show/hide event, you can also send a `SIGUSR1` signal while adding `-S, --signal` to the command.  
-This will **ignore** the mouse completely and only listen for a `SIGUSR1`-signal  
-at which it will either show or hide itself.  
+Instead of using your mouse to trigger the show/hide event, you can also send a `SIGUSR1` to the process.  
+For this to work, the process needs to be started using the `-S, --signal` argument.  
 
-To send a `SIGUSR1`-signal you could use `kill`:
+This will than **ignore** the mouse completely and only listen for `SIGUSR1` at which it will either show or hide the window.  
+
+For example:
 ```bash
-kill -SIGUSR1 <pid>
+$ ./hideIt.sh --name drop-down-terminal --signal
+```
+
+To send a `SIGUSR1`-signal you can use `hideIt.sh` itself:
+```bash
+$ ./hideIt.sh --name drop-down-terminal --toggle
+```
+
+or use plain old `kill` itself:
+```bash
+$ kill -SIGUSR1 <pid>
 ```
 
 ## Q&A

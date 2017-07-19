@@ -34,9 +34,11 @@ peek=3
 direction="left"
 steps=1
 no_trans=1
+toggle=1
 
 _is_hidden=1
 _has_region=1
+_affi_pid=""
 
 
 usage() {
@@ -83,6 +85,11 @@ usage() {
     printf "\n"
     printf " -T, --no-trans\n"
     printf "   Turn of the transition effect.\n"
+    printf "\n"
+    printf " -t, --toggle\n"
+    printf "   Try to send a SIGUSR1 to the process running with the same name.\n"
+    printf "   If the process can not be uniquely identified, do nothing.\n"
+
 }
 
 
@@ -169,6 +176,9 @@ argparse() {
             "-T"|"--no-trans")
                 no_trans=0
                 ;;
+            "-t"|"--toggle")
+                toggle=0
+                ;;
             "-h"|"--help")
                 usage
                 exit 0
@@ -188,8 +198,10 @@ argparse() {
         exit 1
     fi
 
-    if [ $signal -ne 0 ] && [ $_has_region -ne 0 ] && [ $hover -ne 0 ]; then
-        printf "At least one of --signal, --hover or --region is required!\n"
+    if [ $toggle -ne 0 ] && [ $signal -ne 0 ] && [ $_has_region -ne 0 ] \
+            && [ $hover -ne 0 ]; then
+        printf "At least one of --toggle, --signal, --hover or" 1>&2
+        printf " --region is required!\n" 1>&2
         exit 1
     fi
 }
@@ -237,6 +249,24 @@ function fetch_window_dimensions() {
     if [ ! -z "$1" ] && [ $1 -eq 0 ]; then
         win_posX=$(echo "$win_info" | sed -rn 's/.*Absolute upper-left X: +(-?[0-9]+)/\1/p')
         win_posY=$(echo "$win_info" | sed -rn 's/.*Absolute upper-left Y: +(-?[0-9]+)/\1/p')
+    fi
+}
+
+function fetch_affiliated_pid() {
+    # Sets the values for the following global
+    #    _affi_pid
+    local _self=($$)
+    local _name=`basename "$0"`
+    local pids=($(pgrep -f ".*${_name}.*${win_name}.*"))
+
+    # Remove ourself from the list of pids
+    pids=(${pids[@]/$_self})
+
+    if [ ${#pids[@]} -eq 1 ]; then
+        _affi_pid=${pids[-1]}
+    else
+        printf "Couldn't uniquely identify pid\n" 1>&2
+        _affi_pid=""
     fi
 }
 
@@ -392,6 +422,17 @@ function main() {
         exit 1
     else
         printf "Found window with id: $win_id\n"
+    fi
+
+    if [ $toggle -eq 0 ]; then
+        printf "Toggeling window...\n"
+        fetch_affiliated_pid
+        if [[ $_affi_pid =~ [0-9]+ ]]; then
+            kill -SIGUSR1 $_affi_pid
+            exit 0
+        else
+            exit 1
+        fi
     fi
 
     printf "Fetching window dimensions...\n"
