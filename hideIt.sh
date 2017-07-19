@@ -335,17 +335,17 @@ function hide_window() {
 
         for pos in ${sequence[@]}; do
             if [[ "$direction" =~ ^(left|right)$ ]]; then
-                xdotool windowmove --sync $win_id $pos y
+                xdotool windowmove --sync $win_id $pos $win_posY
             elif [[ "$direction" =~ ^(top|bottom)$ ]]; then
-                xdotool windowmove --sync $win_id x $pos
+                xdotool windowmove --sync $win_id $win_posX $pos
             fi
         done
     else
         pos=${sequence[-1]}
         if [[ "$direction" =~ ^(left|right)$ ]]; then
-            xdotool windowmove --sync $win_id $pos y
+            xdotool windowmove --sync $win_id $pos $win_posY
         elif [[ "$direction" =~ ^(top|bottom)$ ]]; then
-            xdotool windowmove --sync $win_id x $pos
+            xdotool windowmove --sync $win_id $win_posX $pos
         fi
     fi
 }
