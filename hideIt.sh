@@ -401,12 +401,19 @@ function main() {
     printf "Initially hiding window...\n"
     hide_window 0
 
-    printf "Defined region:\n"
-    printf "  X: $minX $maxX\n"
-    printf "  Y: $minY $maxY\n"
-    printf "\n"
+    if [ $signal -eq 0 ]; then
+        printf "Waiting for SIGUSR1...\n"
+    elif [ $_has_region -eq 0 ]; then
+        printf "Defined region:\n"
+        printf "  X: $minX $maxX\n"
+        printf "  Y: $minY $maxY\n"
+        printf "\n"
 
-    printf "Waiting for trigger...\n"
+        printf "Waiting for region...\n"
+    elif [ $hover -eq 0 ]; then
+        printf "Waiting for hover...\n"
+    fi
+
     serve
 
     exit 0
