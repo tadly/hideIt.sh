@@ -193,7 +193,17 @@ argparse() {
 function fetch_window_id() {
     # Sets the values for the following global
     #   win_id
-    win_id="$(xdotool search --name "$win_name")"
+    local windows=($(xdotool search --name "$win_name"))
+
+    if [ ${#windows[@]} -lt 1 ]; then
+        win_id=""
+    elif [ ${#windows[@]} -eq 1 ]; then
+        win_id=${windows[-1]}
+    elif [ ${#windows[@]} -gt 1 ]; then
+        printf "Found more than one window matching the name \"$win_name\"\n" 1>&2
+        printf "Using the first one!\n" 1>&2
+        win_id=${windows[-1]}
+    fi
 }
 
 
