@@ -350,8 +350,10 @@ function serve() {
 
 
 function restore() {
-    printf "Restoring original window position...\n"
-    hide_window 1
+    if [ $_is_hidden -eq 0 ]; then
+        printf "Restoring original window position...\n"
+        hide_window 1
+    fi
     exit 0
 }
 
