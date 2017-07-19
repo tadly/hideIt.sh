@@ -187,6 +187,11 @@ argparse() {
         printf "Window name required. See --name for help.\n" 1>&2
         exit 1
     fi
+
+    if [ $signal -ne 0 ] && [ $_has_region -ne 0 ] && [ $hover -ne 0 ]; then
+        printf "At least one of --signal, --hover or --region is required!\n"
+        exit 1
+    fi
 }
 
 
