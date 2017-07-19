@@ -18,6 +18,7 @@ and re-wrote the whole thing, making it more generic and (hopefully) userfriendl
     * [Polybar systray](#polybar-systray)
     * [Polybar (my main bar)](#polybar-my-main-bar)
     * [Nautilus?](#nautilus)
+    * [By keyboard (SIGUSR1)](#by-keyboard-sigusr1)
  * [Q&A](#qa)
 
 
@@ -99,6 +100,16 @@ Heck... why stop at the statusbar amiright?
 
 *Disclaimer: Yes, I know, this is getting silly but I gotta demonstrate how versatile this is* ( ͡° ͜ʖ ͡°)
 
+
+### By keyboard (SIGUSR1)
+Instead of using your mouse to trigger the show/hide event, you can also send a `SIGUSR1` signal while adding `-S, --signal` to the command.  
+This will **ignore** the mouse completely and only listen for a `SIGUSR1`-signal  
+at which it will either show or hide itself.  
+
+To send a `SIGUSR1`-signal you could use `kill`:
+```bash
+kill -SIGUSR1 <pid>
+```
 
 ## Q&A
 #### *How does the script determine when to trigger?*  
