@@ -215,11 +215,11 @@ function fetch_window_id() {
     if [ ${#windows[@]} -lt 1 ]; then
         win_id=""
     elif [ ${#windows[@]} -eq 1 ]; then
-        win_id=${windows[-1]}
+        win_id=${windows[0]}
     elif [ ${#windows[@]} -gt 1 ]; then
         printf "Found more than one window matching the name \"$win_name\"\n" 1>&2
         printf "Using the first one!\n" 1>&2
-        win_id=${windows[-1]}
+        win_id=${windows[0]}
     fi
 }
 
@@ -251,6 +251,7 @@ function fetch_window_dimensions() {
         win_posY=$(echo "$win_info" | sed -rn 's/.*Absolute upper-left Y: +(-?[0-9]+)/\1/p')
     fi
 }
+
 
 function fetch_affiliated_pid() {
     # Sets the values for the following global
