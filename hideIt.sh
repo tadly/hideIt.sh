@@ -308,15 +308,12 @@ function hide_window() {
 function serve() {
     # Check if the cursors location and act accordingly
     local _hide=0
-    while true; do
-        # SIGUSR1 will cause the sleep/wait combo to
-        # end so we have to loop that too
-        if [ $signal -eq 0 ]; then
-            sleep infinity &
-            wait $!
-            continue
-        fi
+    if [ $signal -eq 0 ]; then
+        read
+        return
+    fi
 
+    while true; do
         eval $(xdotool getmouselocation --shell)
 
         # Test if the cursor is within the region
