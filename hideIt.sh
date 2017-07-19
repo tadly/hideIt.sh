@@ -233,50 +233,65 @@ function hide_window() {
         xdotool windowactivate $win_id > /dev/null 2>&1
     fi
 
+    local to=""
     local sequence=""
     if [ "$direction" == "left" ]; then
+        to=-$(($win_width - $peek))
         if [ $hide -eq 0 ]; then
-            sequence=($(seq $win_posX -$steps -$(($win_width - $peek))))
+            sequence=($(seq $win_posX -$steps $to))
+            sequence+=$to
         else
-            sequence=($(seq -$(($win_width - $peek)) $steps $win_posX))
+            sequence=($(seq $to $steps $win_posX))
+            sequence+=$win_posX
         fi
 
     elif [ "$direction" == "right" ]; then
+        to=$(($screen_width - $peek))
         if [ $hide -eq 0 ]; then
-            sequence=($(seq $win_posX $steps $(($screen_width - $peek))))
+            sequence=($(seq $win_posX $steps $to))
+            sequence+=$to
         else
-            sequence=($(seq $(($screen_width - $peek)) -$steps $win_posX))
+            sequence=($(seq $to -$steps $win_posX))
+            sequence+=$win_posX
         fi
 
     elif [ "$direction" == "bottom" ]; then
+        to=$(($screen_height - $peek))
         if [ $hide -eq 0 ]; then
-            sequence=($(seq $win_posY $steps $(($screen_height - $peek))))
+            sequence=($(seq $win_posY $steps $to))
+            sequence+=$to
         else
-            sequence=($(seq $(($screen_height - $peek)) -$steps $win_posY))
+            sequence=($(seq $to -$steps $win_posY))
+            sequence+=$win_posY
         fi
 
     elif [ "$direction" == "top" ]; then
+        to=-$(($win_height - $peek))
         if [ $hide -eq 0 ]; then
-            sequence=($(seq $win_posY -$steps -$(($win_height - $peek))))
+            sequence=($(seq $win_posY -$steps $to))
+            sequence+=$to
         else
-            sequence=($(seq -$(($win_height - $peek)) $steps $win_posY))
+            sequence=($(seq $to $steps $win_posY))
+            sequence+=$win_posY
         fi
     fi
 
-    if [ $no_trans -eq 1 ]; then
-        for i in ${sequence[@]}; do
+    if [ $no_trans -ne 0 ]; then
+        unset sequence[0]
+
+        for pos in ${sequence[@]}; do
             if [[ "$direction" =~ ^(left|right)$ ]]; then
-                xdotool windowmove $win_id $i y
+                xdotool windowmove --sync $win_id $pos y
             elif [[ "$direction" =~ ^(top|bottom)$ ]]; then
-                xdotool windowmove $win_id x $i
+                xdotool windowmove --sync $win_id x $pos
             fi
         done
     else
         pos=${sequence[-1]}
         if [[ "$direction" =~ ^(left|right)$ ]]; then
-            xdotool windowmove $win_id $pos y
+            xdotool windowmove --sync $win_id $pos y
         elif [[ "$direction" =~ ^(top|bottom)$ ]]; then
-            xdotool windowmove $win_id x $pos
+            xdotool windowmove --sync $win_id x $pos
         fi
     fi
 }
