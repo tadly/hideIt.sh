@@ -174,7 +174,7 @@ argparse() {
         shift
     done
 
-    # Check arg validity
+    # Check required arg
     if [ -z "$win_name" ]; then
         printf "Window name required. See --name for help.\n" 1>&2
         exit 1
@@ -236,35 +236,35 @@ function hide_window() {
     local sequence=""
     if [ "$direction" == "left" ]; then
         if [ $hide -eq 0 ]; then
-            sequence=$(seq $win_posX -$steps -$(($win_width - $peek)))
+            sequence=($(seq $win_posX -$steps -$(($win_width - $peek))))
         else
-            sequence=$(seq -$(($win_width - $peek)) $steps $win_posX)
+            sequence=($(seq -$(($win_width - $peek)) $steps $win_posX))
         fi
 
     elif [ "$direction" == "right" ]; then
         if [ $hide -eq 0 ]; then
-            sequence=$(seq $win_posX $steps $(($screen_width - $peek)))
+            sequence=($(seq $win_posX $steps $(($screen_width - $peek))))
         else
-            sequence=$(seq $(($screen_width - $peek)) -$steps $win_posX)
+            sequence=($(seq $(($screen_width - $peek)) -$steps $win_posX))
         fi
 
     elif [ "$direction" == "bottom" ]; then
         if [ $hide -eq 0 ]; then
-            sequence=$(seq $win_posY $steps $(($screen_height - $peek)))
+            sequence=($(seq $win_posY $steps $(($screen_height - $peek))))
         else
-            sequence=$(seq $(($screen_height - $peek)) -$steps $win_posY)
+            sequence=($(seq $(($screen_height - $peek)) -$steps $win_posY))
         fi
 
     elif [ "$direction" == "top" ]; then
         if [ $hide -eq 0 ]; then
-            sequence=$(seq $win_posY -$steps -$(($win_height - $peek)))
+            sequence=($(seq $win_posY -$steps -$(($win_height - $peek))))
         else
-            sequence=$(seq -$(($win_height - $peek)) $steps $win_posY)
+            sequence=($(seq -$(($win_height - $peek)) $steps $win_posY))
         fi
     fi
 
     if [ $no_trans -eq 1 ]; then
-        for i in $sequence; do
+        for i in ${sequence[@]}; do
             if [[ "$direction" =~ ^(left|right)$ ]]; then
                 xdotool windowmove $win_id $i y
             elif [[ "$direction" =~ ^(top|bottom)$ ]]; then
@@ -272,7 +272,6 @@ function hide_window() {
             fi
         done
     else
-        sequence=($sequence)
         pos=${sequence[-1]}
         if [[ "$direction" =~ ^(left|right)$ ]]; then
             xdotool windowmove $win_id $pos y
