@@ -356,14 +356,15 @@ function hide_window() {
 
 
 function serve() {
-    # Check if the cursors location and act accordingly
+    # Check the cursors location and act accordingly
     local _hide=0
-    if [ $signal -eq 0 ]; then
-        read
-        return
-    fi
 
     while true; do
+        if [ $signal -eq 0 ]; then
+            read
+            continue
+        fi
+
         eval $(xdotool getmouselocation --shell)
 
         # Test if the cursor is within the region
