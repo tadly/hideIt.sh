@@ -261,7 +261,8 @@ function fetch_affiliated_pid() {
     #    _affi_pid
     local _self=($$)
     local _name=`basename "$0"`
-    local pids=($(pgrep -f ".*${_name}.*${win_name}.*"))
+    local _escaped="$(printf "%q" $win_name)"
+    local pids=($(pgrep -f ".*${_name}.*${_escaped}.*"))
 
     # Remove ourself from the list of pids
     pids=(${pids[@]/$_self})
