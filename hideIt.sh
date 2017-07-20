@@ -91,6 +91,18 @@ usage() {
     printf " -t, --toggle\n"
     printf "   Try to send a SIGUSR1 to the process running with the SAME NAME.\n"
     printf "   If the process can not be uniquely identified, do nothing.\n"
+    printf "\n\n"
+    printf "Examples:\n"
+    printf "  Dropdown Terminal:\n"
+    printf "    # Start a terminal with a unique name\n"
+    printf "    # (Make sure yourself it is positioned correctly)\n"
+    printf "    $ termite --title=dropdown-terminal &\n"
+    printf "\n"
+    printf "    # Hide it and wait for a SIGUSR1 signal\n"
+    printf "    $ hideIt.sh --name '^dropdown-terminal$' --direction top --steps 5 --signal\n"
+    printf "\n"
+    printf "    # Send a SIGUSR1 signal (This could be mapped to a keyboard shortcut)\n"
+    printf "    $ hideIt.sh --name '^dropdown-terminal$' --toggle\n"
 }
 
 
