@@ -283,7 +283,7 @@ function hide_window() {
     # Update win_width, win_height in case they changed
     fetch_window_dimensions
 
-    if [ $hide -eq 1 ]; then
+    if [ $hide -ne 0 ]; then
         xdotool windowactivate $win_id > /dev/null 2>&1
     fi
 
@@ -347,6 +347,11 @@ function hide_window() {
         elif [[ "$direction" =~ ^(top|bottom)$ ]]; then
             xdotool windowmove --sync $win_id $win_posX $pos
         fi
+    fi
+
+    if [ $hide -eq 0 ]; then
+        eval $(xdotool getmouselocation --shell)
+        xdotool windowactivate $WINDOW > /dev/null 2>&1
     fi
 }
 
