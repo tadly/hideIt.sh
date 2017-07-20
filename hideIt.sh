@@ -448,7 +448,7 @@ function main() {
     printf "Fetching screen dimensions...\n"
     fetch_screen_dimensions
 
-    trap restore SIGINT
+    trap restore EXIT
     trap toggle SIGUSR1
 
     printf "Initially hiding window...\n"
