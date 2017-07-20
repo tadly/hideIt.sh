@@ -117,7 +117,7 @@ argparse() {
                 # to add them all together
                 expr $posX + $posY + $offsetX + $offsetY > /dev/null 2>&1
                 if [ $? -ne 0 ]; then
-                    printf "Invalid region. See --region for help.\n" 1>&2
+                    printf "Invalid region. See --help for usage.\n" 1>&2
                     exit 1
                 fi
 
@@ -135,7 +135,7 @@ argparse() {
 
                 if [[ ! $minX =~ [0-9]+ ]] || [[ ! $minY =~ [0-9]+ ]] \
                         || [[ ! $maxY =~ [0-9]+ ]] || [[ ! $maxY =~ [0-9]+ ]]; then
-                    printf "Missing or invalid region. See --region for help.\n" 1>&2
+                    printf "Missing or invalid region. See --help for usage.\n" 1>&2
                     exit 1
                 fi
                 _has_region=0
@@ -160,8 +160,7 @@ argparse() {
             "-d"|"--direction")
                 direction="$2"
                 if [[ ! "$direction" =~ ^(left|right|top|bottom)$ ]]; then
-                    printf "Invalid direction. " 1>&2
-                    printf "Should be one of left, right, top, bottom.\n" 1>&2
+                    printf "Invalid direction. See --help for usage.\n" 1>&2
                     exit 1
                 fi
                 shift
@@ -186,16 +185,16 @@ argparse() {
                 ;;
             **)
                 printf "Didn't understand '$1'\n" 1>&2
-                printf "Use -h, --help for usage information.\n"
+                printf "See --help for usage.\n"
                 exit 1
                 ;;
         esac
         shift
     done
 
-    # Check required arg
+    # Check required arguments
     if [ -z "$win_name" ]; then
-        printf "Window name required. See --name for help.\n" 1>&2
+        printf "Window name required. See --help for usage.\n" 1>&2
         exit 1
     fi
 
@@ -218,7 +217,8 @@ function fetch_window_id() {
     elif [ ${#windows[@]} -eq 1 ]; then
         win_id=${windows[0]}
     elif [ ${#windows[@]} -gt 1 ]; then
-        printf "Found more than one window matching the name \"$win_name\"\n" 1>&2
+        printf "Found more than one window matching the "
+        printf "pattern '$win_name'\n" 1>&2
         printf "Using the first one!\n" 1>&2
         win_id=${windows[0]}
     fi
@@ -248,8 +248,10 @@ function fetch_window_dimensions() {
     win_height=$(echo "$win_info" | sed -rn 's/.*Height: +([0-9]+)/\1/p')
 
     if [ ! -z "$1" ] && [ $1 -eq 0 ]; then
-        win_posX=$(echo "$win_info" | sed -rn 's/.*Absolute upper-left X: +(-?[0-9]+)/\1/p')
-        win_posY=$(echo "$win_info" | sed -rn 's/.*Absolute upper-left Y: +(-?[0-9]+)/\1/p')
+        win_posX=$(echo "$win_info" | \
+            sed -rn 's/.*Absolute upper-left X: +(-?[0-9]+)/\1/p')
+        win_posY=$(echo "$win_info" | \
+            sed -rn 's/.*Absolute upper-left Y: +(-?[0-9]+)/\1/p')
     fi
 }
 
@@ -284,10 +286,13 @@ function hide_window() {
     # Update win_width, win_height in case they changed
     fetch_window_dimensions
 
+    # Activate the window.
+    # Should bring it to the front, change workspace etc.
     if [ $hide -ne 0 ]; then
         xdotool windowactivate $win_id > /dev/null 2>&1
     fi
 
+    # Generate the sequence used to move the window
     local to=""
     local sequence=""
     if [ "$direction" == "left" ]; then
@@ -331,6 +336,7 @@ function hide_window() {
         fi
     fi
 
+    # Actually move the window
     if [ $no_trans -ne 0 ]; then
         for pos in ${sequence[@]}; do
             if [[ "$direction" =~ ^(left|right)$ ]]; then
@@ -348,6 +354,8 @@ function hide_window() {
         fi
     fi
 
+    # In case we hid the window, try to give focus to whatever is
+    # underneath the cursor.
     if [ $hide -eq 0 ]; then
         eval $(xdotool getmouselocation --shell)
         xdotool windowactivate $WINDOW > /dev/null 2>&1
@@ -360,15 +368,19 @@ function serve() {
     local _hide=0
 
     while true; do
+        # If signal-based, we just block to cause no cpu time and 'read'
+        # works well for that.
+        # If you the user sends a return, we just start over
         if [ $signal -eq 0 ]; then
             read
             continue
         fi
 
+        # Get cursor x, y position and active window
         eval $(xdotool getmouselocation --shell)
 
-        # Test if the cursor is within the region
         if [ $_has_region -eq 0 ]; then
+            # Test if the cursor is within the region
             if [ $X -ge $minX -a $X -le $maxX ] \
                     && [ $Y -ge $minY -a $Y -le $maxY ]; then
                 _hide=1
@@ -377,6 +389,7 @@ function serve() {
             fi
 
         elif [ $hover -eq 0 ]; then
+            # Test if cursor hovers the window
             if [ $WINDOW -eq $win_id ]; then
                 _hide=1
             else
@@ -384,6 +397,7 @@ function serve() {
             fi
         fi
 
+        # Don't hide if the cursor is still above the window
         if [ $_is_hidden -ne 0 ] \
                 && [ $_hide -eq 0 ] \
                 && [ $WINDOW -eq $win_id ]; then
@@ -395,21 +409,27 @@ function serve() {
             hide_window $_hide
         fi
 
+        # Cut some slack
         sleep $interval
     done
 }
 
 
 function restore() {
+    # Called by trap once we receive an EXIT
+
     if [ $_is_hidden -eq 0 ]; then
         printf "Restoring original window position...\n"
         hide_window 1
     fi
+
     exit 0
 }
 
 
 function toggle() {
+    # Called by trap once we receive a SIGUSR1
+
     if [ $_is_hidden -eq 0 ]; then
         hide_window 1
     else
@@ -419,6 +439,9 @@ function toggle() {
 
 
 function main() {
+    # Entry point for hideIt
+
+    # Parse all the args!
     argparse "$@"
 
     printf "Searching window...\n"
@@ -466,9 +489,8 @@ function main() {
         printf "Waiting for hover...\n"
     fi
 
+    # Start observing the cursor etc.
     serve
-
-    exit 0
 }
 
 # Lets do disss!
