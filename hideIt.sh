@@ -294,46 +294,44 @@ function hide_window() {
         to=-$(($win_width - $peek))
         if [ $hide -eq 0 ]; then
             sequence=($(seq $win_posX -$steps $to))
-            sequence+=$to
+            sequence+=($to)
         else
             sequence=($(seq $to $steps $win_posX))
-            sequence+=$win_posX
+            sequence+=($win_posX)
         fi
 
     elif [ "$direction" == "right" ]; then
         to=$(($screen_width - $peek))
         if [ $hide -eq 0 ]; then
             sequence=($(seq $win_posX $steps $to))
-            sequence+=$to
+            sequence+=($to)
         else
             sequence=($(seq $to -$steps $win_posX))
-            sequence+=$win_posX
+            sequence+=($win_posX)
         fi
 
     elif [ "$direction" == "bottom" ]; then
         to=$(($screen_height - $peek))
         if [ $hide -eq 0 ]; then
             sequence=($(seq $win_posY $steps $to))
-            sequence+=$to
+            sequence+=($to)
         else
             sequence=($(seq $to -$steps $win_posY))
-            sequence+=$win_posY
+            sequence+=($win_posY)
         fi
 
     elif [ "$direction" == "top" ]; then
         to=-$(($win_height - $peek))
         if [ $hide -eq 0 ]; then
             sequence=($(seq $win_posY -$steps $to))
-            sequence+=$to
+            sequence+=($to)
         else
             sequence=($(seq $to $steps $win_posY))
-            sequence+=$win_posY
+            sequence+=($win_posY)
         fi
     fi
 
     if [ $no_trans -ne 0 ]; then
-        unset sequence[0]
-
         for pos in ${sequence[@]}; do
             if [[ "$direction" =~ ^(left|right)$ ]]; then
                 xdotool windowmove --sync $win_id $pos $win_posY
