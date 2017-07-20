@@ -32,7 +32,7 @@ signal=1
 interval=1
 peek=3
 direction="left"
-steps=1
+steps=3
 no_trans=1
 toggle=1
 
@@ -46,8 +46,9 @@ usage() {
     printf "usage: $0 [options]\n"
     printf "\n"
     printf "Required:\n"
-    printf " -N, --name [window-name]\n"
+    printf " -N, --name [pattern]\n"
     printf "   The name of the window to hide.\n"
+    printf "   This is the same string that is displayed in the window titlebar.\n"
     printf "\n"
     printf "Optional:\n"
     printf " -r, --region [posXxposY+offsetX+offsetY]\n"
@@ -58,7 +59,7 @@ usage() {
     printf "\n"
     printf " -H, --hover\n"
     printf "   Show the window when hovering over it.\n"
-    printf "   If a region was defined, hover will be ignored!\n"
+    printf "   If --region was defined, --hover will be ignored!\n"
     printf "   This will only work if --peek is greater 0.\n"
     printf "   By default, hover is off.\n"
     printf "\n"
@@ -71,7 +72,8 @@ usage() {
     printf "   Defaults to 1.\n"
     printf "\n"
     printf " -p, --peek [amount]\n"
-    printf "   When moved out, peek 'amount' of pixels to indicate the window.\n"
+    printf "   When hidden, peek 'amount' of pixels to indicate the window.\n"
+    printf "   Required if --hover is used."
     printf "   Defaults to 3.\n"
     printf "\n"
     printf " -d, --direction [left|right|top|bottom]\n"
@@ -81,15 +83,14 @@ usage() {
     printf " -s, --steps [amount]\n"
     printf "   Steps in pixel used to move the window. The higher the value,\n"
     printf "   the faster it will move at the cost of smoothness.\n"
-    printf "   Defaults to 1.\n"
+    printf "   Defaults to 3.\n"
     printf "\n"
     printf " -T, --no-trans\n"
     printf "   Turn of the transition effect.\n"
     printf "\n"
     printf " -t, --toggle\n"
-    printf "   Try to send a SIGUSR1 to the process running with the same name.\n"
+    printf "   Try to send a SIGUSR1 to the process running with the SAME NAME.\n"
     printf "   If the process can not be uniquely identified, do nothing.\n"
-
 }
 
 
