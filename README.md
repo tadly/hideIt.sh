@@ -26,6 +26,7 @@ and re-wrote the whole thing, making it more generic and (hopefully) userfriendl
 1. bash
 2. xdotool
 3. xwininfo
+4. xev
 
 
 ### Optionally
@@ -124,6 +125,7 @@ $ kill -SIGUSR1 <pid>
 
 ## Q&A
 #### *How does the script determine when to trigger?*  
-Sadly via polling (hence the `--interval` switch).  
-I tried xdotools `behave_screen_edge` but weird things came from it so I decided on the polling-route.  
-I've tried my best to keep the cpu usage down though!
+Depends on whether you use `--region`, `--hover` or `--signal`.
+ * `--region` does do polling and the interval can be change via `--interval`
+ * `--hover` uses **xev** to monitor the window and is therefor event based
+ * `--signal` waits for a **SIGUSR1**

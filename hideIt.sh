@@ -7,7 +7,7 @@
 #   but should be generic enough to do other things as well.
 #
 #   Requirements:
-#      bash, xdotool, xwininfo
+#      bash, xdotool, xwininfo, xev
 #
 
 # Global variables used throughout the script
@@ -376,19 +376,22 @@ function hide_window() {
 }
 
 
-function serve() {
+function toggle() {
+    # Called by trap once we receive a SIGUSR1
+
+    if [ $_is_hidden -eq 0 ]; then
+        hide_window 1
+    else
+        hide_window 0
+    fi
+}
+
+
+function serve_region() {
     # Check the cursors location and act accordingly
+
     local _hide=0
-
     while true; do
-        # If signal-based, we just block to cause no cpu time and 'read'
-        # works well for that.
-        # If you the user sends a return, we just start over
-        if [ $signal -eq 0 ]; then
-            read
-            continue
-        fi
-
         # Get cursor x, y position and active window
         eval $(xdotool getmouselocation --shell)
 
@@ -396,14 +399,6 @@ function serve() {
             # Test if the cursor is within the region
             if [ $X -ge $minX -a $X -le $maxX ] \
                     && [ $Y -ge $minY -a $Y -le $maxY ]; then
-                _hide=1
-            else
-                _hide=0
-            fi
-
-        elif [ $hover -eq 0 ]; then
-            # Test if cursor hovers the window
-            if [ $WINDOW -eq $win_id ]; then
                 _hide=1
             else
                 _hide=0
@@ -427,6 +422,24 @@ function serve() {
     done
 }
 
+function serve_signal() {
+    # Wait for a SIGUSR1 signal
+
+    trap toggle SIGUSR1
+    while true; do
+        read
+    done
+}
+
+function serve_xev() {
+    xev -id $win_id -event mouse | while read line; do
+        if [[ "$line" =~ ^EnterNotify.* ]]; then
+            hide_window 1
+        elif [[ "$line" =~ ^LeaveNotify.* ]]; then
+            hide_window 0
+        fi
+    done
+}
 
 function restore() {
     # Called by trap once we receive an EXIT
@@ -440,15 +453,6 @@ function restore() {
 }
 
 
-function toggle() {
-    # Called by trap once we receive a SIGUSR1
-
-    if [ $_is_hidden -eq 0 ]; then
-        hide_window 1
-    else
-        hide_window 0
-    fi
-}
 
 
 function main() {
@@ -484,7 +488,6 @@ function main() {
     fetch_screen_dimensions
 
     trap restore EXIT
-    trap toggle SIGUSR1
 
     printf "Initially hiding window...\n"
     hide_window 0
@@ -502,8 +505,14 @@ function main() {
         printf "Waiting for hover...\n"
     fi
 
-    # Start observing the cursor etc.
-    serve
+    # Start observing
+    if [ $_has_region -eq 0 ]; then
+        serve_region
+    elif [ $signal -eq 0 ]; then
+        serve_signal
+    elif [ $hover -eq 0 ]; then
+        serve_xev
+    fi
 }
 
 # Lets do disss!
