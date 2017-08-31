@@ -78,7 +78,7 @@ $ xprop | grep WM_NAME
 WM_NAME(STRING) = "Polybar tray window"
 
 # Hide it
-$ ./hideIt.sh --name "Polybar tray window" --hover
+$ ./hideIt.sh --name "Polybar tray window" --region 0x1080+10+-40
 ```
 ![hideIt-systray](assets/hideIt-systray.gif)  
 *[Wallpaper](https://www.pixiv.net/member_illust.php?mode=medium&illust_id=60439088)*
@@ -124,8 +124,13 @@ $ kill -SIGUSR1 <pid>
 ```
 
 ## Q&A
-#### *How does the script determine when to trigger?*  
+#### *How does the script determine when to trigger?*
 Depends on whether you use `--region`, `--hover` or `--signal`.
  * `--region` does do polling and the interval can be change via `--interval`
  * `--hover` uses **xev** to monitor the window and is therefor event based
  * `--signal` waits for a **SIGUSR1**
+
+#### *My system tray goes nuts when using `--hover`! What the heck?*
+This is because each systray element (the icon) is its own window resulting  
+in *entry -> leave -> enter -> ...* events.  
+To work around this, use `--region` or `--signal` instead.
