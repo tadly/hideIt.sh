@@ -13,6 +13,8 @@
 # Global variables used throughout the script
 win_id=""
 win_name=""
+win_class=""
+win_instance=""
 
 win_width=""
 win_height=""
@@ -38,17 +40,26 @@ toggle=1
 
 _is_hidden=1
 _has_region=1
-_affi_pid=""
+_pid_file=""
 
 
 usage() {
     # Print usage
     printf "usage: $0 [options]\n"
     printf "\n"
-    printf "Required:\n"
+    printf "Required (At least on):\n"
     printf " -N, --name [pattern]\n"
-    printf "   The name of the window to hide.\n"
+    printf "   Match against the window name.\n"
     printf "   This is the same string that is displayed in the window titlebar.\n"
+    printf "\n"
+    printf " -C, --class [pattern]\n"
+    printf "   Match against the window class.\n"
+    printf "\n"
+    printf " -I, --instance [pattern]\n"
+    printf "   Match against the window instance.\n"
+    printf "\n"
+    printf " --id [window-id]\n"
+    printf "   Explicitly specify a window id rather than searching for one.\n"
     printf "\n"
     printf "Optional:\n"
     printf " -r, --region [posXxposY+offsetX+offsetY]\n"
@@ -112,6 +123,23 @@ argparse() {
         case $1 in
             "-N"|"--name")
                 win_name="$2"
+                shift
+                ;;
+            "-C"|"--class")
+                win_class="$2"
+                shift
+                ;;
+            "-I"|"--instance")
+                win_instance="$2"
+                shift
+                ;;
+            "--id")
+                if [[ ! $2 =~ [0-9]+ ]]; then
+                    printf "Invalid window id. Should be a number.\n" 1>&2
+                    exit 1
+                fi
+
+                win_id="$2"
                 shift
                 ;;
             "-H"|"--hover")
@@ -205,8 +233,10 @@ argparse() {
     done
 
     # Check required arguments
-    if [ -z "$win_name" ]; then
-        printf "Window name required. See --help for usage.\n" 1>&2
+    local _names="$win_name$win_class$$win_instance"
+    if [ -z "$_names" ] && [ -z "$win_id" ]; then
+        printf "At least one of --name, --class, --instance or --id" 1>&2
+        printf " is required!\n" 1>&2
         exit 1
     fi
 
@@ -222,17 +252,75 @@ argparse() {
 function fetch_window_id() {
     # Sets the values for the following global
     #   win_id
-    local windows=($(xdotool search --name "$win_name"))
 
-    if [ ${#windows[@]} -lt 1 ]; then
-        win_id=""
-    elif [ ${#windows[@]} -eq 1 ]; then
-        win_id=${windows[0]}
-    elif [ ${#windows[@]} -gt 1 ]; then
-        printf "Found more than one window matching the "
-        printf "pattern '$win_name'\n" 1>&2
-        printf "Using the first one!\n" 1>&2
-        win_id=${windows[0]}
+    # We already have a window id
+    if [ ! -z "$win_id" ]; then
+        _pid_file="/tmp/hideIt-${win_id}.pid"
+        return
+    fi
+
+    local _id=-1
+
+    # Search all windows matching the provided class
+    local _tmp1=()
+    if [ ! -z "$win_class" ]; then
+        _tmp1=($(xdotool search --class "$win_class"))
+        _tmp1=${_tmp1:--1}
+    fi
+
+    # Search all windows matching the provided instance
+    local _tmp2=()
+    if [ ! -z "$win_instance" ]; then
+        _tmp2=($(xdotool search --classname "$win_instance"))
+        _tmp2=${_tmp2:--1}
+    fi
+
+    # Search all windows matching the provided name (title)
+    local _tmp3=()
+    if [ ! -z "$win_name" ]; then
+        _tmp3=($(xdotool search --name "$win_name"))
+        _tmp3=${_tmp3:--1}
+    fi
+
+    # Shift values upwards
+    for i in {1..2}; do
+        if [ -z $_tmp1 ]; then
+            _tmp1=(${_tmp2[@]})
+            _tmp2=()
+        fi
+
+        if [ -z $_tmp2 ]; then
+            _tmp2=(${_tmp3[@]})
+            _tmp3=()
+        fi
+    done
+
+    if [ -z $_tmp2 ]; then
+        # We only have one list of ids so we pick the first one from it
+        _id=${_tmp1[0]}
+    else
+        # We have multiple lists so we have to find the id that appears
+        # in all of them
+        local _oldIFS=$IFS
+        IFS=$'\n\t'
+
+        local _ids=($(comm -12 \
+            <(echo "${_tmp1[*]}" | sort) \
+            <(echo "${_tmp2[*]}" | sort)))
+
+        if [ ! -z $_tmp3 ]; then
+            _ids=($(comm -12 \
+                <(echo "${_tmp3[*]}" | sort) \
+                <(echo "${_ids[*]}" | sort)))
+        fi
+        IFS=$_oldIFS
+
+        _id=${_ids[0]}
+    fi
+
+    if [[ $_id =~ [0-9]+ ]] && [ $_id -gt 0 ]; then
+        win_id=$_id
+        _pid_file="/tmp/hideIt-${win_id}.pid"
     fi
 }
 
@@ -268,22 +356,21 @@ function fetch_window_dimensions() {
 }
 
 
-function fetch_affiliated_pid() {
-    # Sets the values for the following global
-    #    _affi_pid
-    local _self=($$)
-    local _name=`basename "$0"`
-    local _escaped="$(printf "%q" $win_name)"
-    local pids=($(pgrep -f ".*${_name}.*${_escaped}.*"))
+function toggle_instance() {
+    if [ ! -f "$_pid_file" ]; then
+        printf "Pid file at \"${_pid_file}\" doesn't exist!\n" 1>&2
+        exit 1
+    fi
 
-    # Remove ourself from the list of pids
-    pids=(${pids[@]/$_self})
+    local _pid=`cat $_pid_file`
+    printf "Toggeling instance...\n"
 
-    if [ ${#pids[@]} -eq 1 ]; then
-        _affi_pid=${pids[-1]}
+    if [[ $_pid =~ [0-9]+ ]]; then
+        kill -SIGUSR1 $_pid
+        exit 0
     else
-        printf "Couldn't uniquely identify pid\n" 1>&2
-        _affi_pid=""
+        printf "Invalid pid in \"${_pid_file}\".\n" 1>&2
+        exit 1
     fi
 }
 
@@ -306,8 +393,8 @@ function hide_window() {
     fi
 
     # Generate the sequence used to move the window
-    local to=""
-    local sequence=""
+    local to=()
+    local sequence=()
     if [ "$direction" == "left" ]; then
         to=-$(($win_width - $peek))
         if [ $hide -eq 0 ]; then
@@ -424,10 +511,15 @@ function serve_region() {
 function serve_signal() {
     # Wait for a SIGUSR1 signal
 
+    # Save our pid into a file so the --toggle option
+    # can easily access it
+    echo "$$" > /tmp/hideIt-${win_id}.pid
+
     trap toggle SIGUSR1
     while true; do
         read
     done
+
 }
 
 
@@ -444,6 +536,8 @@ function serve_xev() {
 
 function restore() {
     # Called by trap once we receive an EXIT
+
+    rm "$_pid_file"
 
     if [ $_is_hidden -eq 0 ]; then
         printf "Restoring original window position...\n"
@@ -470,14 +564,8 @@ function main() {
     fi
 
     if [ $toggle -eq 0 ]; then
-        printf "Toggeling window...\n"
-        fetch_affiliated_pid
-        if [[ $_affi_pid =~ [0-9]+ ]]; then
-            kill -SIGUSR1 $_affi_pid
-            exit 0
-        else
-            exit 1
-        fi
+        toggle_instance
+        exit 0
     fi
 
     printf "Fetching window dimensions...\n"
