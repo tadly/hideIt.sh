@@ -395,14 +395,12 @@ function serve_region() {
         # Get cursor x, y position and active window
         eval $(xdotool getmouselocation --shell)
 
-        if [ $_has_region -eq 0 ]; then
-            # Test if the cursor is within the region
-            if [ $X -ge $minX -a $X -le $maxX ] \
-                    && [ $Y -ge $minY -a $Y -le $maxY ]; then
-                _hide=1
-            else
-                _hide=0
-            fi
+        # Test if the cursor is within the region
+        if [ $X -ge $minX -a $X -le $maxX ] \
+                && [ $Y -ge $minY -a $Y -le $maxY ]; then
+            _hide=1
+        else
+            _hide=0
         fi
 
         # Don't hide if the cursor is still above the window
@@ -422,6 +420,7 @@ function serve_region() {
     done
 }
 
+
 function serve_signal() {
     # Wait for a SIGUSR1 signal
 
@@ -430,6 +429,7 @@ function serve_signal() {
         read
     done
 }
+
 
 function serve_xev() {
     xev -id $win_id -event mouse | while read line; do
@@ -441,6 +441,7 @@ function serve_xev() {
     done
 }
 
+
 function restore() {
     # Called by trap once we receive an EXIT
 
@@ -451,8 +452,6 @@ function restore() {
 
     exit 0
 }
-
-
 
 
 function main() {
