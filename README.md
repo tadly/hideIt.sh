@@ -12,7 +12,9 @@ and re-wrote the whole thing, making it more generic and (hopefully) userfriendl
 
 ## Table of Contents
  * [Requirements](#requirements)
-    * [Optionally](#optionally)
+ * [Installation](#installation)
+    * [Manual](#manual)
+    * [Arch Linux](#arch-linux)
  * [Usage](#usage)
  * [Examples](#examples)
     * [Polybar systray](#polybar-systray)
@@ -23,14 +25,29 @@ and re-wrote the whole thing, making it more generic and (hopefully) userfriendl
 
 
 ## Requirements
-1. bash
-2. xdotool
-3. xwininfo
-4. xev
+1. xdotool
+2. xwininfo
+3. xev
 
 
-### Optionally
-1. xprop (to find the windows name)
+## Installation
+### Manual
+First, make sure all [requirements](#requirements) are installed.  
+Than, simply download [hideIt.sh](https://raw.githubusercontent.com/Tadly/hideIt.sh/master/hideIt.sh) to a location of your choice and use it.
+```bash
+# Using wget
+wget https://raw.githubusercontent.com/Tadly/hideIt.sh/master/hideIt.sh
+
+# Using curl
+curl https://raw.githubusercontent.com/Tadly/hideIt.sh/master/hideIt.sh -o hideIt.sh
+```
+
+### Arch Linux
+hideIt.sh can be found in the [aur](hideit.sh-git)
+```bash
+# Using pacaur
+pacaur -S hideit.sh-git
+```
 
 
 ## Usage
@@ -78,7 +95,7 @@ $ xprop | grep WM_NAME
 WM_NAME(STRING) = "Polybar tray window"
 
 # Hide it
-$ ./hideIt.sh --name "Polybar tray window" --region 0x1080+10+-40
+$ ./hideIt.sh --name '^Polybar tray window$' --region 0x1080+10+-40
 ```
 ![hideIt-systray](assets/hideIt-systray.gif)  
 *[Wallpaper](https://www.pixiv.net/member_illust.php?mode=medium&illust_id=60439088)*
@@ -87,8 +104,7 @@ $ ./hideIt.sh --name "Polybar tray window" --region 0x1080+10+-40
 ### Polybar (my main bar)
 You don't need my whole polybar config right? Right!  
 
-I only did this for the purpose of testing while working on this script but...  
-...I think I like it! :)  
+I only did this for the purpose of testing while working on this script but...   I think I like it! :)  
 ![hideIt-polybar](assets/hideIt-polybar.gif)  
 *[Wallpaper](https://www.pixiv.net/member_illust.php?mode=medium&illust_id=60439088)*
 
@@ -132,5 +148,6 @@ Depends on whether you use `--region`, `--hover` or `--signal`.
 
 #### *My system tray goes nuts when using `--hover`! What the heck?*
 This is because each systray element (the icon) is its own window resulting  
-in *entry -> leave -> enter -> ...* events.  
+in *entry -> leave -> entry -> ...* events due to the window underneath your  
+cursor constantly changing.  
 To work around this, use `--region` or `--signal` instead.
