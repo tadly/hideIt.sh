@@ -11,36 +11,36 @@
 #
 
 # Global variables used throughout the script
-win_id=""
-win_name=""
-win_class=""
-win_instance=""
+WIN_ID=""
+WIN_NAME=""
+WIN_CLASS=""
+WIN_INSTANCE=""
 
-win_width=""
-win_height=""
-win_posX=""
-win_posY=""
+WIN_WIDTH=""
+WIN_HEIGHT=""
+WIN_POSX=""
+WIN_POSY=""
 
-screen_width=""
-screen_height=""
+SCREEN_WIDTH=""
+SCREEN_HEIGHT=""
 
-minX=""
-minY=""
-maxX=""
-maxY=""
+MINX=""
+MINY=""
+MAXX=""
+MAXY=""
 
-hover=1
-signal=1
-interval=1
-peek=3
-direction="left"
-steps=3
-no_trans=1
-toggle=1
+HOVER=1
+SIGNAL=1
+INTERVAL=1
+PEEK=3
+DIRECTION="left"
+STEPS=3
+NO_TRANS=1
+TOGGLE=1
 
-_is_hidden=1
-_has_region=1
-_pid_file=""
+_IS_HIDDEN=1
+_HAS_REGION=1
+_PID_FILE=""
 
 
 usage() {
@@ -88,11 +88,11 @@ usage() {
     printf "   Defaults to 3.\n"
     printf "\n"
     printf " -d, --direction [left|right|top|bottom]\n"
-    printf "   Direction in which to move the window.\n"
+    printf "   direction in which to move the window.\n"
     printf "   Defaults to left.\n"
     printf "\n"
     printf " -s, --steps [amount]\n"
-    printf "   Steps in pixel used to move the window. The higher the value,\n"
+    printf "   steps in pixel used to move the window. The higher the value,\n"
     printf "   the faster it will move at the cost of smoothness.\n"
     printf "   Defaults to 3.\n"
     printf "\n"
@@ -122,15 +122,15 @@ argparse() {
     while [ $# -gt 0 ]; do
         case $1 in
             "-N"|"--name")
-                win_name="$2"
+                WIN_NAME="$2"
                 shift
                 ;;
             "-C"|"--class")
-                win_class="$2"
+                WIN_CLASS="$2"
                 shift
                 ;;
             "-I"|"--instance")
-                win_instance="$2"
+                WIN_INSTANCE="$2"
                 shift
                 ;;
             "--id")
@@ -139,14 +139,14 @@ argparse() {
                     exit 1
                 fi
 
-                win_id="$2"
+                WIN_ID="$2"
                 shift
                 ;;
             "-H"|"--hover")
-                hover=0
+                HOVER=0
                 ;;
             "-S"|"--signal")
-                signal=0
+                SIGNAL=0
                 ;;
             "-r"|"--region")
                 local posX posY offsetX offsetY
@@ -161,63 +161,63 @@ argparse() {
                     exit 1
                 fi
 
-                minX=$posX
-                maxX=$((${minX} + ${offsetX}))
-                if [ $minX -gt $maxX ]; then
-                    read minX maxX <<< "$maxX $minX"
+                MINX=$posX
+                MAXX=$((${MINX} + ${offsetX}))
+                if [ $MINX -gt $MAXX ]; then
+                    read MINX MAXX <<< "$MAXX $MINX"
                 fi
 
-                minY=$posY
-                maxY=$((${minY} + ${offsetY}))
-                if [ $minY -gt $maxY ]; then
-                    read minY maxY <<< "$maxY $minY"
+                MINY=$posY
+                MAXY=$((${MINY} + ${offsetY}))
+                if [ $MINY -gt $MAXY ]; then
+                    read MINY MAXY <<< "$MAXY $MINY"
                 fi
 
-                if [[ ! $minX =~ [0-9]+ ]] || [[ ! $minY =~ [0-9]+ ]] \
-                        || [[ ! $maxY =~ [0-9]+ ]] || [[ ! $maxY =~ [0-9]+ ]]; then
+                if [[ ! $MINX =~ [0-9]+ ]] || [[ ! $MINY =~ [0-9]+ ]] \
+                        || [[ ! $MAXY =~ [0-9]+ ]] || [[ ! $MAXY =~ [0-9]+ ]]; then
                     printf "Missing or invalid region. See --help for usage.\n" 1>&2
                     exit 1
                 fi
-                _has_region=0
+                _HAS_REGION=0
                 shift
                 ;;
             "-i"|"--interval")
-                interval="$2"
-                if [[ ! $interval =~ [0-9]+ ]]; then
+                INTERVAL="$2"
+                if [[ ! $INTERVAL =~ [0-9]+ ]]; then
                     printf "Interval should be a number. " 1>&2
                     exit 1
                 fi
                 shift
                 ;;
             "-p"|"--peek")
-                peek="$2"
-                if [[ ! $peek =~ [0-9]+ ]]; then
+                PEEK="$2"
+                if [[ ! $PEEK =~ [0-9]+ ]]; then
                     printf "Peek should be a number. " 1>&2
                     exit 1
                 fi
                 shift
                 ;;
             "-d"|"--direction")
-                direction="$2"
-                if [[ ! "$direction" =~ ^(left|right|top|bottom)$ ]]; then
+                DIRECTION="$2"
+                if [[ ! "$DIRECTION" =~ ^(left|right|top|bottom)$ ]]; then
                     printf "Invalid direction. See --help for usage.\n" 1>&2
                     exit 1
                 fi
                 shift
                 ;;
             "-s"|"--steps")
-                steps="$2"
-                if [[ ! $steps =~ [0-9]+ ]]; then
+                STEPS="$2"
+                if [[ ! $STEPS =~ [0-9]+ ]]; then
                     printf "Steps should be a number. " 1>&2
                     exit 1
                 fi
                 shift
                 ;;
             "-T"|"--no-trans")
-                no_trans=0
+                NO_TRANS=0
                 ;;
             "-t"|"--toggle")
-                toggle=0
+                TOGGLE=0
                 ;;
             "-h"|"--help")
                 usage
@@ -233,15 +233,15 @@ argparse() {
     done
 
     # Check required arguments
-    local _names="${win_id}${win_name}${win_class}${win_instance}"
-    if [ -z "$_names" ] && [ -z "$win_id" ]; then
+    local _names="${WIN_ID}${WIN_NAME}${WIN_CLASS}${WIN_INSTANCE}"
+    if [ -z "$_names" ] && [ -z "$WIN_ID" ]; then
         printf "At least one of --name, --class, --instance or --id" 1>&2
         printf " is required!\n" 1>&2
         exit 1
     fi
 
-    if [ $toggle -ne 0 ] && [ $signal -ne 0 ] && [ $_has_region -ne 0 ] \
-            && [ $hover -ne 0 ]; then
+    if [ $TOGGLE -ne 0 ] && [ $SIGNAL -ne 0 ] && [ $_HAS_REGION -ne 0 ] \
+            && [ $HOVER -ne 0 ]; then
         printf "At least one of --toggle, --signal, --hover or" 1>&2
         printf " --region is required!\n" 1>&2
         exit 1
@@ -251,11 +251,11 @@ argparse() {
 
 function fetch_window_id() {
     # Sets the values for the following global
-    #   win_id
+    #   WIN_ID
 
     # We already have a window id
-    if [ ! -z "$win_id" ]; then
-        _pid_file="/tmp/hideIt-${win_id}.pid"
+    if [ ! -z "$WIN_ID" ]; then
+        _PID_FILE="/tmp/hideIt-${WIN_ID}.pid"
         return
     fi
 
@@ -263,22 +263,22 @@ function fetch_window_id() {
 
     # Search all windows matching the provided class
     local _tmp1=()
-    if [ ! -z "$win_class" ]; then
-        _tmp1=($(xdotool search --class "$win_class"))
+    if [ ! -z "$WIN_CLASS" ]; then
+        _tmp1=($(xdotool search --class "$WIN_CLASS"))
         _tmp1=${_tmp1:--1}
     fi
 
     # Search all windows matching the provided instance
     local _tmp2=()
-    if [ ! -z "$win_instance" ]; then
-        _tmp2=($(xdotool search --classname "$win_instance"))
+    if [ ! -z "$WIN_INSTANCE" ]; then
+        _tmp2=($(xdotool search --classname "$WIN_INSTANCE"))
         _tmp2=${_tmp2:--1}
     fi
 
     # Search all windows matching the provided name (title)
     local _tmp3=()
-    if [ ! -z "$win_name" ]; then
-        _tmp3=($(xdotool search --name "$win_name"))
+    if [ ! -z "$WIN_NAME" ]; then
+        _tmp3=($(xdotool search --name "$WIN_NAME"))
         _tmp3=${_tmp3:--1}
     fi
 
@@ -319,57 +319,57 @@ function fetch_window_id() {
     fi
 
     if [[ $_id =~ [0-9]+ ]] && [ $_id -gt 0 ]; then
-        win_id=$_id
-        _pid_file="/tmp/hideIt-${win_id}.pid"
+        WIN_ID=$_id
+        _PID_FILE="/tmp/hideIt-${WIN_ID}.pid"
     fi
 }
 
 
 function fetch_screen_dimensions() {
     # Sets the values for the following globals
-    #    screen_width, screen_height
+    #    SCREEN_WIDTH, SCREEN_HEIGHT
 
     local win_info=$(xwininfo -root)
-    screen_width=$(echo "$win_info" | sed -rn 's/.*Width: +([0-9]+)/\1/p')
-    screen_height=$(echo "$win_info" | sed -rn 's/.*Height: +([0-9]+)/\1/p')
+    SCREEN_WIDTH=$(echo "$win_info" | sed -rn 's/.*Width: +([0-9]+)/\1/p')
+    SCREEN_HEIGHT=$(echo "$win_info" | sed -rn 's/.*Height: +([0-9]+)/\1/p')
 }
 
 
 function fetch_window_dimensions() {
-    # Sets the values for the following globals unless no win_id exists
-    #    win_width, win_height, win_posX, win_posY
-    if [[ ! $win_id =~ [0-9]+ ]]; then
+    # Sets the values for the following globals unless no WIN_ID exists
+    #    WIN_WIDTH, WIN_HEIGHT, WIN_POSX, WIN_POSY
+    if [[ ! $WIN_ID =~ [0-9]+ ]]; then
         return
     fi
 
-    local win_info=$(xwininfo -id $win_id)
+    local win_info=$(xwininfo -id $WIN_ID)
 
-    win_width=$(echo "$win_info" | sed -rn 's/.*Width: +([0-9]+)/\1/p')
-    win_height=$(echo "$win_info" | sed -rn 's/.*Height: +([0-9]+)/\1/p')
+    WIN_WIDTH=$(echo "$win_info" | sed -rn 's/.*Width: +([0-9]+)/\1/p')
+    WIN_HEIGHT=$(echo "$win_info" | sed -rn 's/.*Height: +([0-9]+)/\1/p')
 
     if [ ! -z "$1" ] && [ $1 -eq 0 ]; then
-        win_posX=$(echo "$win_info" | \
+        WIN_POSX=$(echo "$win_info" | \
             sed -rn 's/.*Absolute upper-left X: +(-?[0-9]+)/\1/p')
-        win_posY=$(echo "$win_info" | \
+        WIN_POSY=$(echo "$win_info" | \
             sed -rn 's/.*Absolute upper-left Y: +(-?[0-9]+)/\1/p')
     fi
 }
 
 
 function toggle_instance() {
-    if [ ! -f "$_pid_file" ]; then
-        printf "Pid file at \"${_pid_file}\" doesn't exist!\n" 1>&2
+    if [ ! -f "$_PID_FILE" ]; then
+        printf "Pid file at \"${_PID_FILE}\" doesn't exist!\n" 1>&2
         exit 1
     fi
 
-    local _pid=`cat $_pid_file`
+    local _pid=`cat $_PID_FILE`
     printf "Toggeling instance...\n"
 
     if [[ $_pid =~ [0-9]+ ]]; then
         kill -SIGUSR1 $_pid
         exit 0
     else
-        printf "Invalid pid in \"${_pid_file}\".\n" 1>&2
+        printf "Invalid pid in \"${_PID_FILE}\".\n" 1>&2
         exit 1
     fi
 }
@@ -381,76 +381,76 @@ function hide_window() {
     #     hide: 0 to hide, 1 to show
     local hide=$1
 
-    _is_hidden=$hide
+    _IS_HIDDEN=$hide
 
-    # Update win_width, win_height in case they changed
+    # Update WIN_WIDTH, WIN_HEIGHT in case they changed
     fetch_window_dimensions
 
     # Activate the window.
     # Should bring it to the front, change workspace etc.
     if [ $hide -ne 0 ]; then
-        xdotool windowactivate $win_id > /dev/null 2>&1
+        xdotool windowactivate $WIN_ID > /dev/null 2>&1
     fi
 
     # Generate the sequence used to move the window
     local to=()
     local sequence=()
-    if [ "$direction" == "left" ]; then
-        to=-$(($win_width - $peek))
+    if [ "$DIRECTION" == "left" ]; then
+        to=-$(($WIN_WIDTH - $PEEK))
         if [ $hide -eq 0 ]; then
-            sequence=($(seq $win_posX -$steps $to))
+            sequence=($(seq $WIN_POSX -$STEPS $to))
             sequence+=($to)
         else
-            sequence=($(seq $to $steps $win_posX))
-            sequence+=($win_posX)
+            sequence=($(seq $to $STEPS $WIN_POSX))
+            sequence+=($WIN_POSX)
         fi
 
-    elif [ "$direction" == "right" ]; then
-        to=$(($screen_width - $peek))
+    elif [ "$DIRECTION" == "right" ]; then
+        to=$(($SCREEN_WIDTH - $PEEK))
         if [ $hide -eq 0 ]; then
-            sequence=($(seq $win_posX $steps $to))
+            sequence=($(seq $WIN_POSX $STEPS $to))
             sequence+=($to)
         else
-            sequence=($(seq $to -$steps $win_posX))
-            sequence+=($win_posX)
+            sequence=($(seq $to -$STEPS $WIN_POSX))
+            sequence+=($WIN_POSX)
         fi
 
-    elif [ "$direction" == "bottom" ]; then
-        to=$(($screen_height - $peek))
+    elif [ "$DIRECTION" == "bottom" ]; then
+        to=$(($SCREEN_HEIGHT - $PEEK))
         if [ $hide -eq 0 ]; then
-            sequence=($(seq $win_posY $steps $to))
+            sequence=($(seq $WIN_POSY $STEPS $to))
             sequence+=($to)
         else
-            sequence=($(seq $to -$steps $win_posY))
-            sequence+=($win_posY)
+            sequence=($(seq $to -$STEPS $WIN_POSY))
+            sequence+=($WIN_POSY)
         fi
 
-    elif [ "$direction" == "top" ]; then
-        to=-$(($win_height - $peek))
+    elif [ "$DIRECTION" == "top" ]; then
+        to=-$(($WIN_HEIGHT - $PEEK))
         if [ $hide -eq 0 ]; then
-            sequence=($(seq $win_posY -$steps $to))
+            sequence=($(seq $WIN_POSY -$STEPS $to))
             sequence+=($to)
         else
-            sequence=($(seq $to $steps $win_posY))
-            sequence+=($win_posY)
+            sequence=($(seq $to $STEPS $WIN_POSY))
+            sequence+=($WIN_POSY)
         fi
     fi
 
     # Actually move the window
-    if [ $no_trans -ne 0 ]; then
+    if [ $NO_TRANS -ne 0 ]; then
         for pos in ${sequence[@]}; do
-            if [[ "$direction" =~ ^(left|right)$ ]]; then
-                xdotool windowmove $win_id $pos $win_posY
-            elif [[ "$direction" =~ ^(top|bottom)$ ]]; then
-                xdotool windowmove $win_id $win_posX $pos
+            if [[ "$DIRECTION" =~ ^(left|right)$ ]]; then
+                xdotool windowmove $WIN_ID $pos $WIN_POSY
+            elif [[ "$DIRECTION" =~ ^(top|bottom)$ ]]; then
+                xdotool windowmove $WIN_ID $WIN_POSX $pos
             fi
         done
     else
         pos=${sequence[-1]}
-        if [[ "$direction" =~ ^(left|right)$ ]]; then
-            xdotool windowmove $win_id $pos $win_posY
-        elif [[ "$direction" =~ ^(top|bottom)$ ]]; then
-            xdotool windowmove $win_id $win_posX $pos
+        if [[ "$DIRECTION" =~ ^(left|right)$ ]]; then
+            xdotool windowmove $WIN_ID $pos $WIN_POSY
+        elif [[ "$DIRECTION" =~ ^(top|bottom)$ ]]; then
+            xdotool windowmove $WIN_ID $WIN_POSX $pos
         fi
     fi
 
@@ -466,7 +466,7 @@ function hide_window() {
 function toggle() {
     # Called by trap once we receive a SIGUSR1
 
-    if [ $_is_hidden -eq 0 ]; then
+    if [ $_IS_HIDDEN -eq 0 ]; then
         hide_window 1
     else
         hide_window 0
@@ -483,37 +483,37 @@ function serve_region() {
         eval $(xdotool getmouselocation --shell)
 
         # Test if the cursor is within the region
-        if [ $X -ge $minX -a $X -le $maxX ] \
-                && [ $Y -ge $minY -a $Y -le $maxY ]; then
+        if [ $X -ge $MINX -a $X -le $MAXX ] \
+                && [ $Y -ge $MINY -a $Y -le $MAXY ]; then
             _hide=1
         else
             _hide=0
         fi
 
         # Don't hide if the cursor is still above the window
-        if [ $_is_hidden -ne 0 ] \
+        if [ $_IS_HIDDEN -ne 0 ] \
                 && [ $_hide -eq 0 ] \
-                && [ $WINDOW -eq $win_id ]; then
+                && [ $WINDOW -eq $WIN_ID ]; then
             _hide=1
         fi
 
         # Only do something if necessary
-        if [ $_is_hidden -ne $_hide ]; then
+        if [ $_IS_HIDDEN -ne $_hide ]; then
             hide_window $_hide
         fi
 
         # Cut some slack
-        sleep $interval
+        sleep $INTERVAL
     done
 }
 
 
 function serve_signal() {
-    # Wait for a SIGUSR1 signal
+    # Wait for a SIGUSR1 SIGNAL
 
-    # Save our pid into a file so the --toggle option
+    # Save our pid into a file so the --TOGGLE option
     # can easily access it
-    echo "$$" > /tmp/hideIt-${win_id}.pid
+    echo "$$" > /tmp/hideIt-${WIN_ID}.pid
 
     trap toggle SIGUSR1
     while true; do
@@ -524,7 +524,7 @@ function serve_signal() {
 
 
 function serve_xev() {
-    xev -id $win_id -event mouse | while read line; do
+    xev -id $WIN_ID -event mouse | while read line; do
         if [[ "$line" =~ ^EnterNotify.* ]]; then
             hide_window 1
         elif [[ "$line" =~ ^LeaveNotify.* ]]; then
@@ -537,9 +537,9 @@ function serve_xev() {
 function restore() {
     # Called by trap once we receive an EXIT
 
-    rm "$_pid_file"
+    rm "$_PID_FILE"
 
-    if [ $_is_hidden -eq 0 ]; then
+    if [ $_IS_HIDDEN -eq 0 ]; then
         printf "Restoring original window position...\n"
         hide_window 1
     fi
@@ -556,14 +556,14 @@ function main() {
 
     printf "Searching window...\n"
     fetch_window_id
-    if [[ ! $win_id =~ [0-9]+ ]]; then
+    if [[ ! $WIN_ID =~ [0-9]+ ]]; then
         printf "No window found!\n" 1>&2
         exit 1
     else
-        printf "Found window with id: $win_id\n"
+        printf "Found window with id: $WIN_ID\n"
     fi
 
-    if [ $toggle -eq 0 ]; then
+    if [ $TOGGLE -eq 0 ]; then
         toggle_instance
         exit 0
     fi
@@ -579,25 +579,25 @@ function main() {
     printf "Initially hiding window...\n"
     hide_window 0
 
-    if [ $signal -eq 0 ]; then
+    if [ $SIGNAL -eq 0 ]; then
         printf "Waiting for SIGUSR1...\n"
-    elif [ $_has_region -eq 0 ]; then
+    elif [ $_HAS_REGION -eq 0 ]; then
         printf "Defined region:\n"
-        printf "  X: $minX $maxX\n"
-        printf "  Y: $minY $maxY\n"
+        printf "  X: $MINX $MAXX\n"
+        printf "  Y: $MINY $MAXY\n"
         printf "\n"
 
         printf "Waiting for region...\n"
-    elif [ $hover -eq 0 ]; then
-        printf "Waiting for hover...\n"
+    elif [ $HOVER -eq 0 ]; then
+        printf "Waiting for HOVER...\n"
     fi
 
     # Start observing
-    if [ $_has_region -eq 0 ]; then
+    if [ $_HAS_REGION -eq 0 ]; then
         serve_region
-    elif [ $signal -eq 0 ]; then
+    elif [ $SIGNAL -eq 0 ]; then
         serve_signal
-    elif [ $hover -eq 0 ]; then
+    elif [ $HOVER -eq 0 ]; then
         serve_xev
     fi
 }
