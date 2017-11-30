@@ -119,6 +119,7 @@ usage() {
 
 argparse() {
     # Parse system args
+
     while [ $# -gt 0 ]; do
         case $1 in
             "-N"|"--name")
@@ -338,6 +339,7 @@ function fetch_screen_dimensions() {
 function fetch_window_dimensions() {
     # Sets the values for the following globals unless no WIN_ID exists
     #    WIN_WIDTH, WIN_HEIGHT, WIN_POSX, WIN_POSY
+
     if [[ ! $WIN_ID =~ [0-9]+ ]]; then
         return
     fi
@@ -357,6 +359,9 @@ function fetch_window_dimensions() {
 
 
 function toggle_instance() {
+    # Send a SIGUSR1 to an active hideIt.sh instance
+    # if a pid file was found.
+
     if [ ! -f "$_PID_FILE" ]; then
         printf "Pid file at \"${_PID_FILE}\" doesn't exist!\n" 1>&2
         exit 1
@@ -379,6 +384,7 @@ function hide_window() {
     # Move the window in or out
     # Args:
     #     hide: 0 to hide, 1 to show
+
     local hide=$1
 
     _IS_HIDDEN=$hide
@@ -509,7 +515,7 @@ function serve_region() {
 
 
 function serve_signal() {
-    # Wait for a SIGUSR1 SIGNAL
+    # Wait for a SIGUSR1 signal
 
     # Save our pid into a file so the --TOGGLE option
     # can easily access it
@@ -524,6 +530,9 @@ function serve_signal() {
 
 
 function serve_xev() {
+    # Wait for cursor "Enter" and "Leave" events reported by
+    # xev and act accordingly
+
     xev -id $WIN_ID -event mouse | while read line; do
         if [[ "$line" =~ ^EnterNotify.* ]]; then
             hide_window 1
