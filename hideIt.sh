@@ -233,7 +233,7 @@ argparse() {
     done
 
     # Check required arguments
-    local _names="$win_name$win_class$$win_instance"
+    local _names="${win_id}${win_name}${win_class}${win_instance}"
     if [ -z "$_names" ] && [ -z "$win_id" ]; then
         printf "At least one of --name, --class, --instance or --id" 1>&2
         printf " is required!\n" 1>&2
