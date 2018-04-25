@@ -546,7 +546,9 @@ function serve_xev() {
 function restore() {
     # Called by trap once we receive an EXIT
 
-    rm "$_PID_FILE"
+    if [ -f "$_PID_FILE" ]; then
+        rm "$_PID_FILE"
+    fi
 
     if [ $_IS_HIDDEN -eq 0 ]; then
         printf "Restoring original window position...\n"
