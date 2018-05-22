@@ -395,6 +395,13 @@ function hide_window() {
 
     local hide=$1
 
+    # Make sure window still exists and exit if not.
+    xwininfo -id $WIN_ID &> /dev/null
+    if [ $? -ne 0 ]; then
+        printf "Window doesn't exist anymore, exiting!\n"
+        exit 0
+    fi
+
     _IS_HIDDEN=$hide
 
     # Update WIN_WIDTH, WIN_HEIGHT in case they changed
