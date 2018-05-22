@@ -15,6 +15,7 @@ WIN_ID=""
 WIN_NAME=""
 WIN_CLASS=""
 WIN_INSTANCE=""
+WAIT=1
 
 WIN_WIDTH=""
 WIN_HEIGHT=""
@@ -62,6 +63,10 @@ usage() {
     printf "   Explicitly specify a window id rather than searching for one.\n"
     printf "\n"
     printf "Optional:\n"
+    printf " -w, --wait\n"
+    printf "   Wait until a matching window was found.\n"
+    printf "   This will check once every second.\n"
+    printf "\n"
     printf " -r, --region [posXxposY+offsetX+offsetY]\n"
     printf "   Cursor region at which to trigger.\n"
     printf "   Examples:\n"
@@ -142,6 +147,9 @@ argparse() {
 
                 WIN_ID="$2"
                 shift
+                ;;
+            "-w"|"--wait")
+                WAIT=0
                 ;;
             "-H"|"--hover")
                 HOVER=0
@@ -567,6 +575,18 @@ function main() {
 
     printf "Searching window...\n"
     fetch_window_id
+
+    # If enabled, wait until a window was found.
+    if [ $WAIT -eq 0 ] && [[ ! $WIN_ID =~ [0-9]+ ]]; then
+        printf "Waiting for window"
+        while [[ ! $WIN_ID =~ [0-9]+ ]]; do
+            printf "."
+            fetch_window_id
+            sleep 1
+        done
+        printf "\n"
+    fi
+
     if [[ ! $WIN_ID =~ [0-9]+ ]]; then
         printf "No window found!\n" 1>&2
         exit 1
