@@ -531,7 +531,8 @@ function serve_signal() {
 
     trap toggle SIGUSR1
     while true; do
-        read
+        sleep infinity &
+        wait $!
     done
 
 }
