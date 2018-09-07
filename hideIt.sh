@@ -38,8 +38,10 @@ DIRECTION="left"
 STEPS=3
 NO_TRANS=1
 TOGGLE=1
+TOGGLE_PEEK=1
 
 _IS_HIDDEN=1
+_DOES_PEEK=0
 _HAS_REGION=1
 _PID_FILE=""
 
@@ -107,6 +109,10 @@ usage() {
     printf " -t, --toggle\n"
     printf "   Try to send a SIGUSR1 to the process running with the SAME NAME.\n"
     printf "   If the process can not be uniquely identified, do nothing.\n"
+    printf "\n\n"
+    printf " -P, --toggle-peek\n"
+    printf "   Send a SIGUSR2 signal to the process matching the same window.\n"
+    printf "   This will toggle the hidden state of the window if --peek is greater 0."
     printf "\n\n"
     printf "Examples:\n"
     printf "  Dropdown Terminal:\n"
@@ -228,6 +234,9 @@ argparse() {
             "-t"|"--toggle")
                 TOGGLE=0
                 ;;
+            "-P"|"--toggle-peek")
+                TOGGLE_PEEK=0
+                ;;
             "-h"|"--help")
                 usage
                 exit 0
@@ -249,8 +258,8 @@ argparse() {
         exit 1
     fi
 
-    if [ $TOGGLE -ne 0 ] && [ $SIGNAL -ne 0 ] && [ $_HAS_REGION -ne 0 ] \
-            && [ $HOVER -ne 0 ]; then
+    if [ $TOGGLE -ne 0 ] && [ $TOGGLE_PEEK -ne 0 ] && [ $SIGNAL -ne 0 ] \
+            && [ $_HAS_REGION -ne 0 ] && [ $HOVER -ne 0 ]; then
         printf "At least one of --toggle, --signal, --hover or" 1>&2
         printf " --region is required!\n" 1>&2
         exit 1
@@ -366,20 +375,20 @@ function fetch_window_dimensions() {
 }
 
 
-function toggle_instance() {
+function send_signal() {
     # Send a SIGUSR1 to an active hideIt.sh instance
     # if a pid file was found.
-
+    local signal=$1
     if [ ! -f "$_PID_FILE" ]; then
         printf "Pid file at \"${_PID_FILE}\" doesn't exist!\n" 1>&2
         exit 1
     fi
 
     local _pid=`cat $_PID_FILE`
-    printf "Toggeling instance...\n"
+    printf "Sending ${signal} to instance...\n"
 
     if [[ $_pid =~ [0-9]+ ]]; then
-        kill -SIGUSR1 $_pid
+        kill -${signal} $_pid
         exit 0
     else
         printf "Invalid pid in \"${_PID_FILE}\".\n" 1>&2
@@ -403,6 +412,11 @@ function hide_window() {
     fi
 
     _IS_HIDDEN=$hide
+
+    # Reset _DOES_PEEK state
+    if [ $hide -eq 0 ]; then
+        _DOES_PEEK=0
+    fi
 
     # Update WIN_WIDTH, WIN_HEIGHT in case they changed
     fetch_window_dimensions
@@ -485,7 +499,7 @@ function hide_window() {
 
 
 function toggle() {
-    # Called by trap once we receive a SIGUSR1
+    # Toggle the hidden state of the window
 
     if [ $_IS_HIDDEN -eq 0 ]; then
         hide_window 1
@@ -494,6 +508,32 @@ function toggle() {
     fi
 }
 
+function toggle_peek() {
+    # Completely hide/unhide the window in case PEEK is greater 0
+
+    if [ $PEEK -eq 0 ]; then
+        return
+    fi
+
+    local _peek=$PEEK
+    local _win_posx=$WIN_POSX
+    local _win_posy=$WIN_POSY
+
+    fetch_window_dimensions 0
+
+    if [ $_DOES_PEEK -eq 0 ]; then
+        _DOES_PEEK=1
+        PEEK=0
+    else
+        _DOES_PEEK=0
+    fi
+
+    hide_window 0
+
+    PEEK=$_peek
+    WIN_POSX=$_win_posx
+    WIN_POSY=$_win_posy
+}
 
 function serve_region() {
     # Check the cursors location and act accordingly
@@ -525,6 +565,10 @@ function serve_region() {
 
         # Cut some slack
         sleep $INTERVAL
+    done &
+
+    while true; do
+        wait $!
     done
 }
 
@@ -532,16 +576,13 @@ function serve_region() {
 function serve_signal() {
     # Wait for a SIGUSR1 signal
 
-    # Save our pid into a file so the --TOGGLE option
-    # can easily access it
-    echo "$$" > /tmp/hideIt-${WIN_ID}.pid
-
     trap toggle SIGUSR1
+
+    sleep infinity &
+
     while true; do
-        sleep infinity &
         wait $!
     done
-
 }
 
 
@@ -555,6 +596,10 @@ function serve_xev() {
         elif [[ "$line" =~ ^LeaveNotify.* ]]; then
             hide_window 0
         fi
+    done &
+
+    while true; do
+        wait $!
     done
 }
 
@@ -603,7 +648,12 @@ function main() {
     fi
 
     if [ $TOGGLE -eq 0 ]; then
-        toggle_instance
+        send_signal SIGUSR1
+        exit 0
+    fi
+
+    if [ $TOGGLE_PEEK -eq 0 ]; then
+        send_signal SIGUSR2
         exit 0
     fi
 
@@ -630,6 +680,10 @@ function main() {
     elif [ $HOVER -eq 0 ]; then
         printf "Waiting for HOVER...\n"
     fi
+
+    # Save our pid into a file
+    echo "$$" > /tmp/hideIt-${WIN_ID}.pid
+    trap toggle_peek SIGUSR2
 
     # Start observing
     if [ $_HAS_REGION -eq 0 ]; then
