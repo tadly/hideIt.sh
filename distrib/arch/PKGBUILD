@@ -4,17 +4,18 @@ pkgver=a1a05c9
 pkgrel=1
 pkgdesc="Automagically hide/show a window"
 arch=('i686' 'x86_64')
-url="https://github.com/Tadly/hideIt.sh"
+url="https://github.com/tadly/hideIt.sh"
 license=('GPL3')
 depends=('xdotool' 'xorg-xwininfo' 'xorg-xev')
 provides=("${_pkgname}")
-source=("${_pkgname}::git+https://github.com/Tadly/hideIt.sh.git")
+source=("${_pkgname}::git+https://github.com/tadly/hideIt.sh.git")
 md5sums=('SKIP')
 
 
 pkgver() {
     cd "$srcdir/$_pkgname"
-    git rev-parse --short HEAD
+    printf "r%s.%s" "$(git rev-list --count HEAD)" \
+        "$(git rev-parse --short HEAD)"
 }
 
 package() {
