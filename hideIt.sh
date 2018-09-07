@@ -413,11 +413,6 @@ function hide_window() {
 
     _IS_HIDDEN=$hide
 
-    # Reset _DOES_PEEK state
-    if [ $hide -eq 0 ]; then
-        _DOES_PEEK=0
-    fi
-
     # Update WIN_WIDTH, WIN_HEIGHT in case they changed
     fetch_window_dimensions
 
@@ -668,29 +663,23 @@ function main() {
     printf "Initially hiding window...\n"
     hide_window 0
 
-    if [ $SIGNAL -eq 0 ]; then
-        printf "Waiting for SIGUSR1...\n"
-    elif [ $_HAS_REGION -eq 0 ]; then
-        printf "Defined region:\n"
-        printf "  X: $MINX $MAXX\n"
-        printf "  Y: $MINY $MAXY\n"
-        printf "\n"
-
-        printf "Waiting for region...\n"
-    elif [ $HOVER -eq 0 ]; then
-        printf "Waiting for HOVER...\n"
-    fi
-
     # Save our pid into a file
     echo "$$" > /tmp/hideIt-${WIN_ID}.pid
     trap toggle_peek SIGUSR2
 
     # Start observing
     if [ $_HAS_REGION -eq 0 ]; then
+        printf "Defined region:\n"
+        printf "  X: $MINX $MAXX\n"
+        printf "  Y: $MINY $MAXY\n"
+        printf "\n"
+        printf "Waiting for region...\n"
         serve_region
     elif [ $SIGNAL -eq 0 ]; then
+        printf "Waiting for SIGUSR1...\n"
         serve_signal
     elif [ $HOVER -eq 0 ]; then
+        printf "Waiting for HOVER...\n"
         serve_xev
     fi
 }
