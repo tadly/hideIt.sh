@@ -535,35 +535,33 @@ function serve_region() {
 
     local _hide=0
     while true; do
-        # Get cursor x, y position and active window
-        eval $(xdotool getmouselocation --shell)
+        if [ $_DOES_PEEK -eq 0 ]; then
+            # Get cursor x, y position and active window
+            eval $(xdotool getmouselocation --shell)
 
-        # Test if the cursor is within the region
-        if [ $X -ge $MINX -a $X -le $MAXX ] \
-                && [ $Y -ge $MINY -a $Y -le $MAXY ]; then
-            _hide=1
-        else
-            _hide=0
-        fi
+            # Test if the cursor is within the region
+            if [ $X -ge $MINX -a $X -le $MAXX ] \
+                    && [ $Y -ge $MINY -a $Y -le $MAXY ]; then
+                _hide=1
+            else
+                _hide=0
+            fi
 
-        # Don't hide if the cursor is still above the window
-        if [ $_IS_HIDDEN -ne 0 ] \
-                && [ $_hide -eq 0 ] \
-                && [ $WINDOW -eq $WIN_ID ]; then
-            _hide=1
-        fi
+            # Don't hide if the cursor is still above the window
+            if [ $_IS_HIDDEN -ne 0 ] \
+                    && [ $_hide -eq 0 ] \
+                    && [ $WINDOW -eq $WIN_ID ]; then
+                _hide=1
+            fi
 
-        # Only do something if necessary
-        if [ $_IS_HIDDEN -ne $_hide ]; then
-            hide_window $_hide
+            # Only do something if necessary
+            if [ $_IS_HIDDEN -ne $_hide ]; then
+                hide_window $_hide
+            fi
         fi
 
         # Cut some slack
         sleep $INTERVAL
-    done &
-
-    while true; do
-        wait $!
     done
 }
 
