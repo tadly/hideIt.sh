@@ -43,6 +43,7 @@ TOGGLE_PEEK=1
 _IS_HIDDEN=1
 _DOES_PEEK=0
 _HAS_REGION=1
+_WAIT_PID=""
 _PID_FILE=""
 
 
@@ -571,11 +572,7 @@ function serve_signal() {
 
     trap toggle SIGUSR1
 
-    sleep infinity &
-
-    while true; do
-        wait $!
-    done
+    sleep infinity
 }
 
 
@@ -589,16 +586,16 @@ function serve_xev() {
         elif [[ "$line" =~ ^LeaveNotify.* ]]; then
             hide_window 0
         fi
-    done &
-
-    while true; do
-        wait $!
     done
 }
 
 
 function restore() {
     # Called by trap once we receive an EXIT
+
+    if [ -n "$_WAIT_PID" ]; then
+        kill -- "-${_WAIT_PID}"
+    fi
 
     if [ -f "$_PID_FILE" ]; then
         rm "$_PID_FILE"
@@ -672,15 +669,26 @@ function main() {
         printf "  Y: $MINY $MAXY\n"
         printf "\n"
         printf "Waiting for region...\n"
-        serve_region
+        serve_region &
+        _WAIT_PID=$!
     elif [ $SIGNAL -eq 0 ]; then
         printf "Waiting for SIGUSR1...\n"
-        serve_signal
+        serve_signal &
+        _WAIT_PID=$!
     elif [ $HOVER -eq 0 ]; then
         printf "Waiting for HOVER...\n"
-        serve_xev
+        serve_xev &
+        _WAIT_PID=$!
+    fi
+
+    if [ -n "$_WAIT_PID" ]; then
+        while true; do
+            wait "$_WAIT_PID"
+            printf "Received signal...\n"
+        done
     fi
 }
 
 # Lets do disss!
+set -m
 main "$@"
