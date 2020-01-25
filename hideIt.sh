@@ -567,15 +567,6 @@ function serve_region() {
 }
 
 
-function serve_signal() {
-    # Wait for a SIGUSR1 signal
-
-    trap toggle SIGUSR1
-
-    sleep infinity
-}
-
-
 function serve_xev() {
     # Wait for cursor "Enter" and "Leave" events reported by
     # xev and act accordingly
@@ -673,7 +664,8 @@ function main() {
         _WAIT_PID=$!
     elif [ $SIGNAL -eq 0 ]; then
         printf "Waiting for SIGUSR1...\n"
-        serve_signal &
+        trap toggle SIGUSR1
+        sleep infinity &
         _WAIT_PID=$!
     elif [ $HOVER -eq 0 ]; then
         printf "Waiting for HOVER...\n"
