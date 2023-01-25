@@ -45,8 +45,26 @@ curl https://raw.githubusercontent.com/Tadly/hideIt.sh/master/hideIt.sh -o hideI
 ### Arch Linux
 hideIt.sh can be found in the [aur](hideit.sh-git)
 ```bash
+# Using aura
+aura -A hideit.sh-git
+
 # Using pacaur
 pacaur -S hideit.sh-git
+
+# Using pakku
+pakku -S hideit.sh-git
+
+# Using paru
+paru -S hideit.sh-git
+
+# Using pikaur
+pikaur -S hideit.sh-git
+
+# Using trizen
+trizen -S hideit.sh-git
+
+# Using yay
+yay -S hideit.sh-git
 ```
 
 
