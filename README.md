@@ -142,8 +142,8 @@ $ kill -SIGUSR1 <pid>
 ## Q&A
 #### *How does the script determine when to trigger?*
 Depends on whether you use `--region`, `--hover` or `--signal`.
- * `--region` does do polling and the interval can be change via `--interval`
- * `--hover` uses **xev** to monitor the window and is therefor event based
+ * `--region` does polling and the interval can be changed via `--interval`
+ * `--hover` uses **xev** to monitor the window and is therefore event based
  * `--signal` waits for a **SIGUSR1**
 
 #### *My system tray goes nuts when using `--hover`! What the heck?*
